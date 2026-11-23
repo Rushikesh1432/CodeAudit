@@ -26,8 +26,8 @@ export default function AboutView() {
       role: "Explainable AI (XAI) Specialist",
       bio: "Source-code line-level counterfactual attribution engine and attribution visualization.",
       avatar: "📊",
-      github: "https://github.com",
-      linkedin: "https://linkedin.com",
+      github: "https://github.com/Rushikesh1432",
+      linkedin: "https://www.linkedin.com/in/rushikesh-chilimikoti-65b49632b/",
     },
     {
       id: 4,

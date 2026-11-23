@@ -1,7 +1,7 @@
 # AICD-MultiView: Multi-View Representation Learning with Agentic Forensics and Multi-Agent Debate for Robust AI-Generated Code Attribution
 
-> **Comprehensive Research Specification & Technical Reference Document**  
-> *Targeted for Academic Publication (IEEE Transactions on Software Engineering / ACM TOSEM / NeurIPS / ACL / ICSE).*  
+> **Comprehensive Research Specification & Technical Reference Document**
+> *Targeted for Academic Publication (IEEE Transactions on Software Engineering / ACM TOSEM / NeurIPS / ACL / ICSE).*
 > *Prepared for automated paper synthesis via LLMs (Claude 3.7 Sonnet / GPT-4o / Gemini 1.5 Pro).*
 
 ---
@@ -9,10 +9,12 @@
 ## Executive Summary & Research Abstract
 
 The proliferation of Large Language Models (LLMs) capable of generating complex source code (e.g., GPT-4, Claude 3.5, Gemini 1.5, DeepSeek-Coder, LLaMA-Code) has precipitated urgent integrity, security, and licensing challenges in software engineering. Existing AI-code detectors predominantly rely on either:
+
 1. Flat sequence token classification (e.g., standard CodeBERT/RoBERTa), which fails under token renamings, comment stripping, or minor control-flow perturbations; or
 2. Black-box statistical metrics (e.g., perplexity, entropy, burstiness), which lack actionable interpretability and cannot distinguish human-AI collaborative ("Hybrid") or disguised ("Adversarial") code.
 
 **AICD-MultiView** introduces a novel, three-tier hybrid architecture combining:
+
 1. **Tri-View Deep Representation Learning**: A frozen ModernBERT-base encoder coupled with specialized linear projection heads that independently capture logic (`main_code`), modular decomposition (`sub_functions`), and semantic/stylistic documentation (`comments_view`), fused into a unified dense representation for 4-class classification (`Human`, `Machine`, `Hybrid`, `Adversarial`).
 2. **Line-Level Counterfactual Explainability (XAI)**: A mathematically principled attribution engine that computes exact marginal prediction shifts under single-line counterfactual occlusion, providing line-level attribution without token-mapping heuristics.
 3. **Conditional Model-Family Attribution**: A staged hierarchical taxonomy wherein LLM-family classification (e.g., GPT-4, Claude, LLaMA, DeepSeek) is conditionally activated **strictly** when the primary classifier predicts `Machine` (omitting attribution to preserve forensic clarity).
@@ -25,10 +27,18 @@ The proliferation of Large Language Models (LLMs) capable of generating complex 
 ## 1. Research Motivation & Problem Formulation
 
 ### 1.1 The Source Code Attribution Problem
+
 Let $\mathcal{C}$ denote the space of syntactically valid source code across programming languages $\mathcal{L} \in \{\text{Python}, \text{Java}, \text{C++}, \text{JavaScript}, \text{Go}, \dots\}$. The goal of primary attribution is to learn a mapping:
-$$f_{\text{primary}}: \mathcal{C} \to \Delta^3$$
+
+$$
+f_{\text{primary}}: \mathcal{C} \to \Delta^3
+$$
+
 where $\Delta^3 = \{ (p_1, p_2, p_3, p_4) \in [0, 1]^4 \mid \sum p_i = 1 \}$ represents the probability simplex over the 4 canonical origin classes:
-$$\mathcal{Y}_4 = \{ \text{Human}, \text{Machine}, \text{Hybrid}, \text{Adversarial} \}$$
+
+$$
+\mathcal{Y}_4 = \{ \text{Human}, \text{Machine}, \text{Hybrid}, \text{Adversarial} \}
+$$
 
 - **Human**: Authored organically by human engineers, characterized by natural cognitive variance, variable naming entropy, idiomatic shortcuts, and organic commenting patterns.
 - **Machine**: Synthesized purely by generative LLMs, exhibiting high structural predictability, textbook documentation, uniform indentation, and low lexical burstiness.
@@ -36,10 +46,19 @@ $$\mathcal{Y}_4 = \{ \text{Human}, \text{Machine}, \text{Hybrid}, \text{Adversar
 - **Adversarial**: Machine-generated code systematically obfuscated (dead-code injection, variable scrambling, synonym substitution, prompt-injected stylistic disguises) to deceive AI detectors.
 
 ### 1.2 The Staged Conditional Model-Family Attribution Problem
+
 If and only if the predicted origin class is `Machine`:
-$$\hat{y}_{\text{primary}} = \arg\max_{c \in \mathcal{Y}_4} P(Y=c \mid \mathcal{C}) = \text{Machine}$$
+
+$$
+\hat{y}_{\text{primary}} = \arg\max_{c \in \mathcal{Y}_4} P(Y=c \mid \mathcal{C}) = \text{Machine}
+$$
+
 the system activates a secondary hierarchical attribution head:
-$$f_{\text{family}}: \mathcal{C} \to \Delta^{|\mathcal{F}|-1}$$
+
+$$
+f_{\text{family}}: \mathcal{C} \to \Delta^{|\mathcal{F}|-1}
+$$
+
 where $\mathcal{F} = \{ \text{GPT-4}, \text{Claude}, \text{LLaMA}, \text{DeepSeek}, \text{Gemini}, \text{Mistral} \}$. For all other classes ($\text{Human}, \text{Hybrid}, \text{Adversarial}$), family attribution is mathematically undefined and bypassed.
 
 ---
@@ -67,7 +86,7 @@ flowchart TD
     %% 2. PIPELINE: 1. CODE REPRESENTATION (MULTI-VIEW)
     subgraph S1 ["1. Code Representation Pipeline (Multi-View)"]
         PRE["Preprocessing & Splitting\n(Clean, Normalize, Split)"]:::mlNode
-        
+      
         V_MAIN["main_code view"]:::mlNode
         V_SUB["sub_functions view"]:::mlNode
         V_COMM["comments_view"]:::mlNode
@@ -97,7 +116,7 @@ flowchart TD
     subgraph S2 ["2. Local Forensic Agents (Independent Forensics)"]
         AG_A["Agent A (Comment / Style)\n- Analyzes naming & comments\n- Tools: comments, casings, markers"]:::agentNode
         AG_B["Agent B (Structural / AST)\n- Analyzes syntax & complexity\n- Tools: AST depth, cyclomatic, Halstead"]:::agentNode
-        
+      
         OUT_A["Agent A Output\n(Evidence, Rationale, Score)"]:::agentNode
         OUT_B["Agent B Output\n(Evidence, Rationale, Score)"]:::agentNode
     end
@@ -174,7 +193,7 @@ flowchart TD
     GATE -- "High Confidence (>=0.70) & Agreement" --> FINAL_DIRECT
     GATE -- "Low Confidence (<0.70) or Disagreement" --> ADV
     GATE -- "Low Confidence (<0.70) or Disagreement" --> SKP
-    
+  
     ADV --> DEBATE_FLOW
     SKP --> DEBATE_FLOW
     DEBATE_FLOW --> JUDGE
@@ -250,7 +269,9 @@ flowchart TD
 ## 3. Tri-View Representation & Deep Learning Pipeline
 
 ### 3.1 Motivation for Multi-View Decomposition
+
 Standard transformer encoders encode code as a flat token stream. However, code exhibits orthogonal modalities:
+
 1. **Algorithmic Flow**: Loops, conditionality, arithmetic.
 2. **Modular Organization**: Helper functions, recursion, lambda expressions.
 3. **Intent Documentation**: Inline comments, docstrings, licensing headers.
@@ -258,7 +279,9 @@ Standard transformer encoders encode code as a flat token stream. However, code 
 LLMs frequently generate syntactically pristine algorithms but hallucinate unusual comment styles or over-document trivial statements. Conversely, human developers write messy, informal comments but highly modular subroutines. Separating code into three distinct views isolates these forensic signals.
 
 ### 3.2 View Extraction Algorithms
+
 Given source file $\mathcal{C}$:
+
 - **View 1 ($\mathcal{C}_{\text{main}}$)**: Top-level control flow, entry-point scripts (`if __name__ == '__main__':`, `main()`), and global variable definitions. Sub-function bodies are replaced with single-line structural stubs.
 - **View 2 ($\mathcal{C}_{\text{sub}}$)**: Concatenation of all declared helper functions, sub-methods, and class member definitions, stripped of top-level scripts.
 - **View 3 ($\mathcal{C}_{\text{comm}}$)**: Isolated extraction of block comments, docstrings (`"""..."""`), and single-line annotations (`#`, `//`), stripped of executable syntax.
@@ -266,29 +289,60 @@ Given source file $\mathcal{C}$:
 If a view is empty (e.g., code without comments), a sentinel token `"<empty_view>"` is injected to preserve stable geometric embeddings.
 
 ### 3.3 ModernBERT-Base Backbone
+
 ModernBERT (`answerdotai/ModernBERT-base`, 149M parameters) is employed as the frozen foundation encoder:
+
 - **Architecture**: Unpadding FlashAttention-2, rotary positional embeddings (RoPE), GeLU activations, 8192-token context window.
 - **Masked-Mean Pooling**: For each view $v \in \{\text{main}, \text{sub}, \text{comm}\}$, token sequence $\mathbf{H}_v = \text{ModernBERT}(\mathcal{C}_v) \in \mathbb{R}^{L_v \times 768}$:
-  $$\mathbf{e}_v = \frac{\sum_{j=1}^{L_v} m_{v, j} \cdot \mathbf{H}_{v, j}}{\sum_{j=1}^{L_v} m_{v, j}} \in \mathbb{R}^{768}$$
+  $$
+  \mathbf{e}_v = \frac{\sum_{j=1}^{L_v} m_{v, j} \cdot \mathbf{H}_{v, j}}{\sum_{j=1}^{L_v} m_{v, j}} \in \mathbb{R}^{768}
+  $$
+
   where $m_{v, j} \in \{0, 1\}$ is the attention mask.
 
 ### 3.4 Multi-View Projection & Fusion
+
 Each 768-d view vector is passed through an independent linear projection head:
-$$\mathbf{z}_{\text{main}} = \mathbf{W}_{\text{main}} \mathbf{e}_{\text{main}} + \mathbf{b}_{\text{main}} \in \mathbb{R}^{256}$$
-$$\mathbf{z}_{\text{sub}} = \mathbf{W}_{\text{sub}} \mathbf{e}_{\text{sub}} + \mathbf{b}_{\text{sub}} \in \mathbb{R}^{256}$$
-$$\mathbf{z}_{\text{comm}} = \mathbf{W}_{\text{comm}} \mathbf{e}_{\text{comm}} + \mathbf{b}_{\text{comm}} \in \mathbb{R}^{256}$$
+
+$$
+\mathbf{z}_{\text{main}} = \mathbf{W}_{\text{main}} \mathbf{e}_{\text{main}} + \mathbf{b}_{\text{main}} \in \mathbb{R}^{256}
+$$
+
+$$
+\mathbf{z}_{\text{sub}} = \mathbf{W}_{\text{sub}} \mathbf{e}_{\text{sub}} + \mathbf{b}_{\text{sub}} \in \mathbb{R}^{256}
+$$
+
+$$
+\mathbf{z}_{\text{comm}} = \mathbf{W}_{\text{comm}} \mathbf{e}_{\text{comm}} + \mathbf{b}_{\text{comm}} \in \mathbb{R}^{256}
+$$
 
 The projected vectors are concatenated into a fused representation:
-$$\mathbf{z}_{\text{fused}} = [\mathbf{z}_{\text{main}} \,\|\, \mathbf{z}_{\text{sub}} \,\|\, \mathbf{z}_{\text{comm}}] \in \mathbb{R}^{768}$$
+
+$$
+\mathbf{z}_{\text{fused}} = [\mathbf{z}_{\text{main}} \,\|\, \mathbf{z}_{\text{sub}} \,\|\, \mathbf{z}_{\text{comm}}] \in \mathbb{R}^{768}
+$$
 
 *Architectural Isolation*: $\mathbf{z}_{\text{fused}}$ is strictly dedicated to the neural classification head. It sends no signals to external agents or aggregators.
 
 ### 3.5 Primary 4-Class Classification Head
+
 The fused representation feeds into a Multi-Layer Perceptron (MLP):
-$$\mathbf{h}_1 = \text{ReLU}(\mathbf{W}_1 \mathbf{z}_{\text{fused}} + \mathbf{b}_1) \in \mathbb{R}^{256}$$
-$$\mathbf{h}_2 = \text{Dropout}(\mathbf{h}_1, p=0.30)$$
-$$\mathbf{z}_{\text{logits}} = \mathbf{W}_2 \mathbf{h}_2 + \mathbf{b}_2 \in \mathbb{R}^4$$
-$$\mathbf{P}_{\text{ml}} = \text{Softmax}(\mathbf{z}_{\text{logits}}) \in \Delta^3$$
+
+$$
+\mathbf{h}_1 = \text{ReLU}(\mathbf{W}_1 \mathbf{z}_{\text{fused}} + \mathbf{b}_1) \in \mathbb{R}^{256}
+$$
+
+$$
+\mathbf{h}_2 = \text{Dropout}(\mathbf{h}_1, p=0.30)
+$$
+
+$$
+\mathbf{z}_{\text{logits}} = \mathbf{W}_2 \mathbf{h}_2 + \mathbf{b}_2 \in \mathbb{R}^4
+$$
+
+$$
+\mathbf{P}_{\text{ml}} = \text{Softmax}(\mathbf{z}_{\text{logits}}) \in \Delta^3
+$$
 
 Training Objective: Cross-entropy loss with AdamW optimizer ($\text{lr} = 2 \times 10^{-5}$, weight decay $0.01$, linear warmup cosine decay).
 
@@ -297,27 +351,42 @@ Training Objective: Cross-entropy loss with AdamW optimizer ($\text{lr} = 2 \tim
 ## 4. Source-Code Level Counterfactual Explainability (XAI)
 
 ### 4.1 Limitations of Prior Approaches
+
 Standard Gradient-SHAP or Integrated Gradients on raw token embeddings fail on source code for two reasons:
+
 1. **Subword Token Fragmentation**: High attribution on a BPE fragment (e.g., `_self` or `def`) provides zero actionable diagnostic insight to a software auditor.
 2. **Latent Dimension SHAP**: Explaining latent projection dimensions (e.g., "Dim #251: +4.85") fails explainability standards, as latent dimensions lack human semantic meaning.
 
 ### 4.2 Principled Line-Level Counterfactual Occlusion
+
 Let source code $\mathcal{C}$ consist of an ordered sequence of lines $\mathcal{L} = (\ell_1, \ell_2, \dots, \ell_N)$. Let $c^* = \arg\max \mathbf{P}_{\text{ml}}$ be the winning target class.
 
 1. **Baseline Forward Pass**: Compute baseline probability:
-   $$P_{\text{base}} = P(Y = c^* \mid \mathcal{L})$$
+
+   $$
+   P_{\text{base}} = P(Y = c^* \mid \mathcal{L})
+   $$
 2. **Counterfactual Occlusion**: For each non-empty line $i \in \{1, \dots, N\}$, construct counterfactual code $\mathcal{L}_{\setminus i} = (\ell_1, \dots, \ell_{i-1}, \ell_{i+1}, \dots, \ell_N)$. Recompute the multi-view split, ModernBERT encoding, fusion, and forward pass:
-   $$P_{\setminus i} = P(Y = c^* \mid \mathcal{L}_{\setminus i})$$
+
+   $$
+   P_{\setminus i} = P(Y = c^* \mid \mathcal{L}_{\setminus i})
+   $$
 3. **Attribution Score Formulation**:
-   $$\Delta_i = P_{\text{base}} - P_{\setminus i}$$
+
+   $$
+   \Delta_i = P_{\text{base}} - P_{\setminus i}
+   $$
+
    - **$\Delta_i > 0$ (Positive Driver / $\uparrow$)**: Removing line $i$ **decreases** target probability. Line $i$ provides active evidence supporting classification $c^*$.
    - **$\Delta_i < 0$ (Counter Evidence / $\downarrow$)**: Removing line $i$ **increases** target probability. Line $i$ acts as contradictory evidence resisting classification $c^*$.
    - **$\Delta_i \approx 0$ (Neutral)**: Line $i$ has no measurable impact on classification.
-
 4. **Normalized Score for UI Presentation**:
-   $$\tilde{\Delta}_i = \frac{\Delta_i}{\max_{k} |\Delta_k| + \epsilon}$$
-   Visualized in the UI with color intensity mapping and explicit direction arrows ($\uparrow$ positive contribution, $\downarrow$ negative counter-evidence).
 
+   $$
+   \tilde{\Delta}_i = \frac{\Delta_i}{\max_{k} |\Delta_k| + \epsilon}
+   $$
+
+   Visualized in the UI with color intensity mapping and explicit direction arrows ($\uparrow$ positive contribution, $\downarrow$ negative counter-evidence).
 5. **Exclusivity Constraint**: To ensure sound scientific methodology, **no SHAP or counterfactual XAI is computed on the secondary LLM-family classification stage**. Line attribution is strictly reserved for the 4-class classifier.
 
 ---
@@ -327,6 +396,7 @@ Let source code $\mathcal{C}$ consist of an ordered sequence of lines $\mathcal{
 Prior to the confidence gate, two local, tool-using forensic agents examine the **preprocessed and splitted code views** (`main_code`, `sub_functions`, `comments_view`)—**never neural embeddings or fused vectors**—to provide auxiliary evidence:
 
 ### 5.1 Agent A: Comment & Style Forensics
+
 - **Role**: Forensic code stylometrist.
 - **Input**: The extracted `comments_view` and `main_code` views.
 - **Domain**: Identifier casing conventions (camelCase vs. snake_case consistency), comment verbosity ratio, inline explanation style, presence of LLM conversational markers.
@@ -337,6 +407,7 @@ Prior to the confidence gate, two local, tool-using forensic agents examine the 
 - **Evidence Verification**: Every empirical claim in Agent A's output must be an exact verbatim substring of a registered tool call output recorded in `toolset.call_log`.
 
 ### 5.2 Agent B: Structural & Complexity Forensics
+
 - **Role**: AST and software metrics auditor.
 - **Input**: The extracted `main_code` and `sub_functions` views.
 - **Domain**: Syntactic structure, cyclomatic complexity, Halstead volume, maximum AST nesting depth, control-flow density.
@@ -352,25 +423,47 @@ Prior to the confidence gate, two local, tool-using forensic agents examine the 
 ## 6. Deterministic Consensus Aggregation & Dynamic Confidence Gate
 
 ### 6.1 Consensus Aggregation Formulation
+
 To combine continuous neural predictions with symbolic agent outputs without uncalibrated multi-LLM voting, the aggregator expands each agent's scalar prediction into a 4-dimensional discrete probability distribution.
 
 For agent $k \in \{A, B\}$ predicting class $\hat{y}_k \in \mathcal{Y}_4$ with confidence $c_k \in [0, 1]$:
-$$\mathbf{P}_k(c) = \begin{cases} c_k & \text{if } c = \hat{y}_k \\ \frac{1 - c_k}{3} & \text{if } c \neq \hat{y}_k \end{cases}$$
+
+$$
+\mathbf{P}_k(c) = \begin{cases} c_k & \text{if } c = \hat{y}_k \\ \frac{1 - c_k}{3} & \text{if } c \neq \hat{y}_k \end{cases}
+$$
 
 The final aggregated probability vector $\mathbf{P}_{\text{agg}}$ is computed via static convex combination:
-$$\mathbf{P}_{\text{agg}} = w_{\text{ml}} \cdot \mathbf{P}_{\text{ml}} + w_A \cdot \mathbf{P}_A + w_B \cdot \mathbf{P}_B$$
+
+$$
+\mathbf{P}_{\text{agg}} = w_{\text{ml}} \cdot \mathbf{P}_{\text{ml}} + w_A \cdot \mathbf{P}_A + w_B \cdot \mathbf{P}_B
+$$
+
 where:
-$$w_{\text{ml}} = 0.50, \quad w_A = 0.25, \quad w_B = 0.25, \quad \sum w = 1.0$$
+
+$$
+w_{\text{ml}} = 0.50, \quad w_A = 0.25, \quad w_B = 0.25, \quad \sum w = 1.0
+$$
 
 Final Aggregated Prediction:
-$$\hat{y}_{\text{agg}} = \arg\max_{c \in \mathcal{Y}_4} \mathbf{P}_{\text{agg}}(c), \quad C_{\text{agg}} = \max_{c} \mathbf{P}_{\text{agg}}(c)$$
+
+$$
+\hat{y}_{\text{agg}} = \arg\max_{c \in \mathcal{Y}_4} \mathbf{P}_{\text{agg}}(c), \quad C_{\text{agg}} = \max_{c} \mathbf{P}_{\text{agg}}(c)
+$$
 
 ### 6.2 Agreement Metric
+
 Inter-source agreement $\mathcal{A} \in \{\text{True}, \text{False}\}$ is defined as:
-$$\mathcal{A} = \left( \hat{y}_{\text{ml}} == \hat{y}_A \right) \lor \left( \hat{y}_{\text{ml}} == \hat{y}_B \right) \lor \left( \hat{y}_A == \hat{y}_B \right)$$
+
+$$
+\mathcal{A} = \left( \hat{y}_{\text{ml}} == \hat{y}_A \right) \lor \left( \hat{y}_{\text{ml}} == \hat{y}_B \right) \lor \left( \hat{y}_A == \hat{y}_B \right)
+$$
 
 ### 6.3 Confidence Gating Rule
-$$\text{Gate}(\mathbf{P}_{\text{agg}}, \mathcal{A}) = \begin{cases} \text{PASS} & \text{if } C_{\text{agg}} \ge \tau \text{ and } \mathcal{A} == \text{True} \\ \text{TRIGGER\_DEBATE} & \text{otherwise} \end{cases}$$
+
+$$
+\text{Gate}(\mathbf{P}_{\text{agg}}, \mathcal{A}) = \begin{cases} \text{PASS} & \text{if } C_{\text{agg}} \ge \tau \text{ and } \mathcal{A} == \text{True} \\ \text{TRIGGER\_DEBATE} & \text{otherwise} \end{cases}
+$$
+
 Default threshold $\tau = 0.70$.
 
 - If **PASS**: Output $\hat{y}_{\text{agg}}, C_{\text{agg}}$ directly. Inference finishes in $< 180\text{ms}$.
@@ -396,6 +489,7 @@ synthetic fingerprints        human shortcuts
 ```
 
 ### 7.1 The Three Council Member Personas
+
 1. **The Advocate** (Backing: Groq / `gpt-oss-20b`):
    - **Mandate**: Tasked with discovering structural markers, algorithmic uniformity, character entropy, minimal whitespace, and synthetic fingerprints that argue the code is **Machine-generated**.
    - **Key Arguments**: Focuses on low empty-line ratio, character entropy ($4.48$), uniform identifier lengths, and line-length standard deviations typical of template-concatenation generation.
@@ -408,16 +502,19 @@ synthetic fingerprints        human shortcuts
 ### 7.2 Multi-Round Deliberation Dynamics
 
 #### Round 1: Cross-Examination & Opening Arguments
+
 - **Advocate Case**: Presents empirical structural fingerprints (e.g., empty-line ratio = 0.09, character entropy = 4.48, average identifier length = 4.79) arguing for machine origin. Sets its confidence score (e.g., $50\%$).
 - **Skeptic Case**: Highlights human cognitive drift and omissions (e.g., missing `__init__` constructor leading to immediate `TypeError` at runtime, uninitialized member attributes, inconsistent vertical compression). Sets its confidence score (e.g., $95\%$).
 - **Convergence Tracking**: System computes the initial **Convergence Gap** (e.g., $|95\% - 50\%| = 45\text{ pts}$).
 
 #### Round 2: Rebuttal & Counter-Arguments
+
 - **Advocate Rebuttal**: Addresses the Skeptic's missing-constructor claim directly, demonstrating that generative LLMs frequently emit incomplete class snippets when prompted for simple conceptual examples, or rely on runtime dynamic attribute assignment.
 - **Skeptic Rebuttal**: Demonstrates why prompt demonstration habits differ from actual developer scratchpad drafting, reinforcing evidence of human authorship.
 - **Convergence Monitoring**: The gap narrows as evidence is scrutinized.
 
 #### Final Synthesis & Binding Verdict (Presiding Judge)
+
 - The Presiding Judge reviews the complete debate transcript.
 - Cross-checks claimed lines against actual source code lines.
 - Renders the final verdict with line-level justifications, updated aggregated probabilities, and deciding factors.
@@ -427,6 +524,7 @@ synthetic fingerprints        human shortcuts
 ## 8. Multi-Key Round-Robin & Resilient LLM Client Architecture
 
 To prevent rate-limit failures (`HTTP 429 Too Many Requests`) during multi-agent Council deliberation:
+
 - **`APIKeyManager`**: Thread-safe round-robin manager supporting up to 5 concurrent Gemini keys (`API_KEY_1` through `API_KEY_5` or `GEMINI_API_KEY_1` through `GEMINI_API_KEY_5`).
 - **Cooldown Exponential Backoff**: When a key hits a quota or rate-limit error, it is placed on a 60-second cooldown and the manager seamlessly falls back to the next healthy key in rotation.
 - **Zero-Exposure Security Guarantee**: All keys are loaded strictly via backend environment variables. Keys are never printed in logs, never stored in client-accessible responses, and never exposed in frontend bundles.
@@ -436,6 +534,7 @@ To prevent rate-limit failures (`HTTP 429 Too Many Requests`) during multi-agent
 ## 9. Modern Glassmorphism Web Interface
 
 The frontend is implemented with React 18, Vite 5, and custom glassmorphism styling:
+
 - **Palette**:
   - Primary Background & Deep Slate: `#384959`
   - Muted Steel Accents: `#6A89A7`
@@ -453,20 +552,22 @@ The frontend is implemented with React 18, Vite 5, and custom glassmorphism styl
 ## 10. Quantitative Evaluation & Benchmark Results
 
 ### 10.1 Experimental Datasets
+
 - **AICD-T2**: Dataset consisting of 45,000 code snippets labeled by LLM Generator Family (`GPT-4`, `Claude-3`, `LLaMA-3-70B`, `DeepSeek-Coder-33B`, `Mistral-Large`, `Human`). Used for pretraining the ModernBERT encoder and training the conditional family classification head.
 - **AICD-T3**: Benchmark evaluation set of 12,000 diverse programs across 8 languages, balanced across `Human`, `Machine`, `Hybrid`, and `Adversarial` (synthetically obfuscated via variable renaming, dead code injection, and prompt-directed style miming).
 
 ### 10.2 Empirical Performance Summary
 
-| Architecture / Model Configuration | Macro F1 (%) | Accuracy (%) | Adversarial Robustness (%) | Inference Latency (CPU) |
-| :--- | :---: | :---: | :---: | :---: |
-| Standard CodeBERT (Flat Tokenizer) | 81.3% | 82.5% | 68.2% | 120ms |
-| RoBERTa-base (Fine-tuned) | 83.1% | 84.0% | 71.4% | 135ms |
-| ModernBERT (Single Flat View) | 87.4% | 88.2% | 77.9% | 145ms |
-| **AICD-MultiView (Tri-View ML Only)** | **92.1%** | **93.0%** | **84.6%** | **175ms** |
-| **AICD-MultiView (Full Agentic + 3-LLM Council)**| **94.8%** | **96.2%** | **91.4%** | **180ms / 2.8s (Debate)**|
+| Architecture / Model Configuration                      |  Macro F1 (%)  |  Accuracy (%)  | Adversarial Robustness (%) |     Inference Latency (CPU)     |
+| :------------------------------------------------------ | :-------------: | :-------------: | :------------------------: | :-----------------------------: |
+| Standard CodeBERT (Flat Tokenizer)                      |      81.3%      |      82.5%      |           68.2%           |              120ms              |
+| RoBERTa-base (Fine-tuned)                               |      83.1%      |      84.0%      |           71.4%           |              135ms              |
+| ModernBERT (Single Flat View)                           |      87.4%      |      88.2%      |           77.9%           |              145ms              |
+| **AICD-MultiView (Tri-View ML Only)**             | **92.1%** | **93.0%** |      **84.6%**      |         **175ms**         |
+| **AICD-MultiView (Full Agentic + 3-LLM Council)** | **94.8%** | **96.2%** |      **91.4%**      | **180ms / 2.8s (Debate)** |
 
 ### 10.3 Key Empirical Findings
+
 1. **Tri-View Decomposition (+4.7% F1 over Single-View ModernBERT)**: Isolating `comments_view` prevented the model from being spoofed by clean human comments attached to purely machine-generated code logic.
 2. **Agent Forensics on Adversarial Code (+6.8% Robustness)**: Tool-assisted AST and complexity analysis caught 83% of adversarial samples where variable names and comments were deliberately falsified to look human.
 3. **Council Dispute Convergence**: For samples failing the confidence gate ($< 0.70$), the 3-member multi-agent debate converged to the correct ground-truth label in **89.2%** of cases within 2 rounds.
